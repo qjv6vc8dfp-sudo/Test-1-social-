@@ -1,0 +1,265 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sociology Chapter 1 — Quiz</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;max-width:900px;margin:24px auto;padding:12px;color:#111}
+    header{display:flex;align-items:center;gap:12px}
+    h1{margin:0;font-size:1.4rem}
+    .card{border:1px solid #ddd;border-radius:10px;padding:16px;margin-top:12px;box-shadow:0 4px 14px rgba(0,0,0,0.03)}
+    .question{margin:8px 0;padding:12px;background:#fafafa;border-radius:8px}
+    .choices{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    button{background:#0b63d1;color:white;border:none;padding:10px 12px;border-radius:8px;cursor:pointer}
+    button.secondary{background:#eee;color:#111}
+    .result{margin-top:12px;padding:10px;border-radius:8px}
+    .correct{background:#e6ffed;border:1px solid #8ef0b1}
+    .wrong{background:#ffecec;border:1px solid #ffb3b3}
+    footer{margin-top:18px;font-size:0.9rem;color:#555}
+    .small{font-size:0.9rem;color:#555}
+    .hidden{display:none}
+    .review-list{margin-top:12px}
+    .review-item{margin-bottom:8px;padding:8px;background:#fff9e6;border-radius:6px}
+  </style>
+</head>
+<body>
+  <header>
+    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%230b63d1'/><text x='12' y='16' font-size='11' text-anchor='middle' fill='white' font-family='Arial'>SOC</text></svg>" alt="icon" width="56" height="56">
+    <div>
+      <h1>Sociology — Chapter 1 Quiz</h1>
+      <div class="small">10 randomized multiple-choice questions from your saved key terms.</div>
+    </div>
+  </header>
+
+  <main class="card" id="quizCard">
+    <div id="startScreen">
+      <p>This quiz uses your Chapter 1 key terms. Questions are randomized every time. No sign-in required — works offline in your browser.</p>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="startBtn">Start Quiz</button>
+        <button id="previewBtn" class="secondary">Preview Terms</button>
+      </div>
+    </div>
+
+    <div id="questionScreen" class="hidden">
+      <div class="small">Question <span id="qIndex">1</span> / <span id="qTotal">10</span></div>
+      <div class="question" id="questionText">Question text</div>
+      <div class="choices" id="choices"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="nextBtn" class="secondary">Next</button>
+        <button id="endBtn" class="secondary">End Quiz</button>
+      </div>
+      <div id="feedback" class="result hidden"></div>
+    </div>
+
+    <div id="endScreen" class="hidden">
+      <h2 id="scoreTitle">You scored X / 10</h2>
+      <div id="scoreDetails" class="small"></div>
+      <div style="margin-top:12px">
+        <button id="retryBtn">Retry (New Questions)</button>
+        <button id="reviewBtn" class="secondary">Review Answers</button>
+        <button id="downloadBtn" class="secondary">Download Results</button>
+      </div>
+      <div id="reviewArea" class="hidden">
+        <h3 class="small">Review</h3>
+        <div id="reviewList" class="review-list"></div>
+      </div>
+    </div>
+
+    <div id="preview" class="hidden">
+      <h3>Chapter 1 — Key Terms (Quick list)</h3>
+      <ul id="termList"></ul>
+      <div style="margin-top:10px">
+        <button id="backToStart" class="secondary">Back</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="small">Built from your saved Sociology Chapter 1 materials. Open this file in any browser. Questions are randomized but based directly on the saved terms.</footer>
+
+<script>
+// --- DATA: your saved chapter terms ---
+const terms = [
+  {term:"Anomie", def:"Breakdown of social norms or values"},
+  {term:"Conflict perspectives", def:"Society seen as groups competing for power"},
+  {term:"Content analysis", def:"Studying communication or media content"},
+  {term:"Control group", def:"Group not exposed to the experiment treatment"},
+  {term:"Correlation", def:"Relationship between two variables"},
+  {term:"Dependent variable", def:"The outcome being measured"},
+  {term:"Ethnography", def:"First-hand, in-depth study of people"},
+  {term:"Experiment", def:"Research with controlled variables to test cause"},
+  {term:"Experimental group", def:"Group that receives the treatment"},
+  {term:"Functionalist perspectives", def:"View society as a stable system of parts"},
+  {term:"High-income countries", def:"Nations with highly industrial economies"},
+  {term:"Hypothesis", def:"Testable statement about a relationship"},
+  {term:"Independent variable", def:"The factor manipulated in research"},
+  {term:"Industrialization", def:"Shift from farms to factories"},
+  {term:"Interview", def:"Direct questioning for information"},
+  {term:"Latent functions", def:"Hidden or unintended consequences"},
+  {term:"Low-income countries", def:"Poor nations with limited industry"}
+];
+
+// utility: shuffle
+function shuffle(array){for(let i=array.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]]}return array}
+
+// Build 10 questions: mix term->definition and definition->term
+function buildQuestions(){
+  const pool = shuffle([...terms]);
+  const questions = [];
+  const total = Math.min(10,pool.length);
+  for(let i=0;i<total;i++){
+    const item = pool[i];
+    const type = Math.random() < 0.5 ? 'termToDef' : 'defToTerm';
+    if(type==='termToDef'){
+      // prompt: What is <term>?
+      const correct = item.def;
+      const wrongs = shuffle(terms.filter(t=>t.term!==item.term).map(t=>t.def)).slice(0,3);
+      const choices = shuffle([correct,...wrongs]);
+      questions.push({prompt:`What is "${item.term}"?`,choices,answer:correct,explain:`${item.term}: ${item.def}`});
+    } else {
+      const correct = item.term;
+      const wrongs = shuffle(terms.filter(t=>t.term!==item.term).map(t=>t.term)).slice(0,3);
+      const choices = shuffle([correct,...wrongs]);
+      questions.push({prompt:`Which term matches: "${item.def}"`,choices,answer:correct,explain:`${item.term}: ${item.def}`});
+    }
+  }
+  return questions;
+}
+
+// state
+let questions = [];
+let current = 0;
+let score = 0;
+let userAnswers = [];
+
+// DOM refs
+const startBtn = document.getElementById('startBtn');
+const previewBtn = document.getElementById('previewBtn');
+const startScreen = document.getElementById('startScreen');
+const questionScreen = document.getElementById('questionScreen');
+const endScreen = document.getElementById('endScreen');
+const preview = document.getElementById('preview');
+const questionText = document.getElementById('questionText');
+const choicesDiv = document.getElementById('choices');
+const qIndex = document.getElementById('qIndex');
+const qTotal = document.getElementById('qTotal');
+const feedback = document.getElementById('feedback');
+const nextBtn = document.getElementById('nextBtn');
+const endBtn = document.getElementById('endBtn');
+const retryBtn = document.getElementById('retryBtn');
+const reviewBtn = document.getElementById('reviewBtn');
+const reviewArea = document.getElementById('reviewArea');
+const reviewList = document.getElementById('reviewList');
+const termList = document.getElementById('termList');
+const downloadBtn = document.getElementById('downloadBtn');
+
+// attach preview list
+terms.forEach(t=>{
+  const li=document.createElement('li'); li.textContent = t.term + " — " + t.def; termList.appendChild(li);
+});
+
+// start quiz
+startBtn.addEventListener('click', ()=>{
+  questions = buildQuestions();
+  current = 0; score = 0; userAnswers = [];
+  startScreen.classList.add('hidden');
+  preview.classList.add('hidden');
+  endScreen.classList.add('hidden');
+  questionScreen.classList.remove('hidden');
+  qTotal.textContent = questions.length;
+  showQuestion();
+});
+
+previewBtn.addEventListener('click', ()=>{
+  startScreen.classList.add('hidden');
+  preview.classList.remove('hidden');
+});
+
+document.getElementById('backToStart').addEventListener('click', ()=>{
+  preview.classList.add('hidden');
+  startScreen.classList.remove('hidden');
+});
+
+function showQuestion(){
+  const q = questions[current];
+  qIndex.textContent = current+1;
+  questionText.textContent = q.prompt;
+  choicesDiv.innerHTML = '';
+  feedback.classList.add('hidden');
+  q.choices.forEach((c,idx)=>{
+    const b = document.createElement('button');
+    b.textContent = String.fromCharCode(65+idx) + ". " + c;
+    b.addEventListener('click', ()=> chooseAnswer(c,b));
+    choicesDiv.appendChild(b);
+  });
+}
+
+function chooseAnswer(choice,btn){
+  const q = questions[current];
+  const correct = q.answer;
+  const isCorrect = choice === correct;
+  // disable buttons
+  Array.from(choicesDiv.children).forEach(b=>b.disabled=true);
+  // feedback
+  feedback.classList.remove('hidden');
+  feedback.textContent = isCorrect ? "Correct! " + q.explain : "Incorrect. " + q.explain;
+  feedback.className = 'result ' + (isCorrect ? 'correct' : 'wrong');
+  if(isCorrect) score++;
+  userAnswers.push({question:q.prompt, chosen:choice, correct:correct, explain:q.explain, correctFlag:isCorrect});
+}
+
+nextBtn.addEventListener('click', ()=>{
+  if(current < questions.length-1){
+    current++;
+    showQuestion();
+  } else {
+    finishQuiz();
+  }
+});
+
+endBtn.addEventListener('click', finishQuiz);
+
+function finishQuiz(){
+  questionScreen.classList.add('hidden');
+  endScreen.classList.remove('hidden');
+  document.getElementById('scoreTitle').textContent = `You scored ${score} / ${questions.length}`;
+  document.getElementById('scoreDetails').textContent = `Correct: ${score}. Incorrect: ${questions.length - score}.`;
+  reviewList.innerHTML = '';
+  userAnswers.forEach((a,i)=>{
+    const div = document.createElement('div');
+    div.className = 'review-item';
+    div.innerHTML = `<strong>Q${i+1}</strong> ${a.question}<br><em>Your answer:</em> ${a.chosen} <br> <em>Correct:</em> ${a.correct} <br> <small>${a.explain}</small>`;
+    reviewList.appendChild(div);
+  });
+  reviewArea.classList.add('hidden');
+  reviewBtn.disabled = false;
+}
+
+// retry / review / download
+retryBtn.addEventListener('click', ()=>{
+  startScreen.classList.remove('hidden');
+  endScreen.classList.add('hidden');
+});
+
+reviewBtn.addEventListener('click', ()=>{
+  reviewArea.classList.remove('hidden');
+  reviewBtn.disabled = true;
+});
+
+downloadBtn.addEventListener('click', ()=>{
+  const data = {score:score,total:questions.length,date:new Date().toISOString(),answers:userAnswers};
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'sociology_ch1_quiz_results.json'; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url); a.remove();},1000);
+});
+
+// keyboard: n for next when visible
+document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='n' && !questionScreen.classList.contains('hidden')) nextBtn.click(); });
+
+// On load: nothing else
+</script>
+</body>
+</html>
